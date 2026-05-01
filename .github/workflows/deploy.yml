@@ -34,6 +34,15 @@ jobs:
 
       - name: Add Custom Visual Index
         run: cp index.html ./__dist/index.htm
+
+      - name: Copy EPUB bookshelf into distribution
+        run: |
+          mkdir -p __dist/bibi-bookshelf
+          if [ -d __src__/bibi-bookshelf ]; then
+            cp -r __src__/bibi-bookshelf/* __dist/bibi-bookshelf/ || true
+          else
+            echo "No __src__/bibi-bookshelf directory found; skipping EPUB copy"
+          fi
         
       - name: Setup GitHub Pages
         uses: actions/configure-pages@v4

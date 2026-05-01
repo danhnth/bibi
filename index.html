@@ -87,19 +87,19 @@
   <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
 
   <script>
-    // Your books configuration
+    // Your books configuration (public paths used for deployment)
     const books = [
       {
         title: "わたしが恋人になれるわけないじゃん、ムリムリ！",
-        epub: "./__src__/bibi-bookshelf/わたしが恋人になれるわけないじゃん、ムリムリ！/わたしが恋人になれるわけないじゃん、ムリムリ！（※ムリじゃなかった!）.epub"
+        epub: "bibi-bookshelf/わたしが恋人になれるわけないじゃん、ムリムリ！/わたしが恋人になれるわけないじゃん、ムリムリ！（※ムリじゃなかった!）.epub"
       },
       {
         title: "Sample Pre-Paginated LtR",
-        epub: "./__src__/bibi-bookshelf/__samples/Sample_Pre-Paginated_LtR.epub"
+        epub: "bibi-bookshelf/__samples/Sample_Pre-Paginated_LtR.epub"
       },
       {
         title: "Sample Pre-Paginated RtL",
-        epub: "./__src__/bibi-bookshelf/__samples/Sample_Pre-Paginated_RtL.epub"
+        epub: "bibi-bookshelf/__samples/Sample_Pre-Paginated_RtL.epub"
       }
     ];
 
@@ -181,7 +181,8 @@
         }
 
         const link = document.createElement('a');
-        link.href = `./bibi/?book=${book.epub}`;
+        // encodeURIComponent to ensure non-ASCII filenames are URL-safe
+        link.href = `./bibi/?book=${encodeURIComponent(book.epub)}`;
         link.className = 'book-link';
 
         if (!coverUrl) {
