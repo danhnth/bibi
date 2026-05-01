@@ -106,7 +106,23 @@
     // Extract cover from EPUB
     async function extractEpubCover(epubPath) {
       try {
-        const response = await fetch(epubPath);
+        // Ensure the path is URL-encoded (preserve slashes) so non-ASCII
+        // characters and punctuation don't break the request.
+        const fetchPath = encodeURI(epubPath);
+        const response = await fetch(fetchPath);
+
+        // If the server returned a non-OK status, or returned HTML (custom 404 page),
+        // bail out early so JSZip doesn't try to parse an error page as a ZIP.
+        if (!response.ok) {
+          console.warn('EPUB fetch failed:', fetchPath, response.status, response.statusText);
+          return null;
+        }
+        const contentType = response.headers.get('content-type') || '';
+        if (contentType.includes('text/html')) {
+          console.warn('EPUB fetch returned HTML (likely 404 page):', fetchPath);
+          return null;
+        }
+
         const arrayBuffer = await response.arrayBuffer();
         const zip = new JSZip();
         const zipContents = await zip.loadAsync(arrayBuffer);
