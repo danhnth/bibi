@@ -31,8 +31,9 @@ jobs:
         
       - name: Build production version
         run: npm run build
-      - name: Add Root Redirect
-        run: echo '<meta http-equiv="refresh" content="0; URL=./bibi/">' > ./__dist/index.html
+
+      - name: Add Custom Visual Index
+        run: cp index.html ./__dist/index.htm
         
       - name: Setup GitHub Pages
         uses: actions/configure-pages@v4
