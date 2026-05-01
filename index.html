@@ -91,15 +91,15 @@
     const books = [
       {
         title: "わたしが恋人になれるわけないじゃん、ムリムリ！",
-        epub: "わたしが恋人になれるわけないじゃん、ムリムリ！/わたしが恋人になれるわけないじゃん、ムリムリ！（※ムリじゃなかった!）.epub"
+        epub: "bibi-bookshelf/わたしが恋人になれるわけないじゃん、ムリムリ！/わたしが恋人になれるわけないじゃん、ムリムリ！（※ムリじゃなかった!）.epub"
       },
       {
         title: "Sample Pre-Paginated LtR",
-        epub: "__samples/Sample_Pre-Paginated_LtR.epub"
+        epub: "bibi-bookshelf/__samples/Sample_Pre-Paginated_LtR.epub"
       },
       {
         title: "Sample Pre-Paginated RtL",
-        epub: "__samples/Sample_Pre-Paginated_RtL.epub"
+        epub: "bibi-bookshelf/__samples/Sample_Pre-Paginated_RtL.epub"
       }
     ];
 
@@ -198,7 +198,9 @@
 
         const link = document.createElement('a');
         // encodeURIComponent to ensure non-ASCII filenames are URL-safe
-        link.href = `./bibi/?book=${encodeURIComponent(book.epub)}`;
+        // Strip 'bibi-bookshelf/' prefix since Bibi resolves book paths relative to bookshelf
+        const bookPathForBibi = book.epub.replace(/^bibi-bookshelf\//, '');
+        link.href = `./bibi/?book=${encodeURIComponent(bookPathForBibi)}`;
         link.className = 'book-link';
 
         if (!coverUrl) {
