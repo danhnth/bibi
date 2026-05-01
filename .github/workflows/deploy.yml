@@ -2,7 +2,7 @@ name: Deploy Bibi to GitHub Pages
 
 on:
   push:
-    branches: ["main"] # Note: Change "main" to "master" if that is your default branch
+    branches: ["master"] # Note: Change "main" to "master" if that is your default branch
   workflow_dispatch:
 
 permissions:
