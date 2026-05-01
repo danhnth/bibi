@@ -64,7 +64,7 @@ const Config = {
             'bibi/*.html',
             'bibi/extensions/extractor/on-the-fly.bibi-zip-loader.worker.*',
             'bibi/presets/**',
-            'bibi-bookshelf/__samples/**/*.epub',
+            'bibi-bookshelf/**',
             'bibi-demo/**/*.html'
         ],
         [Bibi.SRCBC]: !Bibi.WithBCK ? [] : [
