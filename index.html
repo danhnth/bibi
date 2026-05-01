@@ -9,42 +9,74 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
 
   <style>
+    * {
+      box-sizing: border-box;
+    }
+
     body {
-      background-color: #1a1a1a;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
       color: #fff;
-      font-family: sans-serif;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       min-height: 100vh;
       margin: 0;
+      padding: 20px;
     }
 
     h1 {
-      margin-bottom: 2rem;
+      margin-bottom: 0.5rem;
       font-weight: 300;
-      letter-spacing: 2px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      font-size: 2.5rem;
+      text-shadow: 0 0 20px rgba(255,255,255,0.3);
+    }
+
+    .subtitle {
+      color: #888;
+      margin-bottom: 2rem;
+      font-size: 0.9rem;
+    }
+
+    .series-section {
+      width: 100%;
+      max-width: 1400px;
+      margin-bottom: 3rem;
+    }
+
+    .series-title {
+      font-size: 1.3rem;
+      font-weight: 300;
+      margin-bottom: 1rem;
+      padding-left: 20px;
+      border-left: 3px solid #3498db;
+      color: #ecf0f1;
     }
 
     .swiper {
       width: 100%;
-      padding-top: 50px;
+      padding-top: 30px;
       padding-bottom: 50px;
     }
 
     .swiper-slide {
       background-position: center;
       background-size: cover;
-      width: 250px;
-      height: 350px;
-      border-radius: 8px;
-      box-shadow: 0 15px 30px rgba(0,0,0,0.5);
-      transition: transform 0.3s;
+      width: 220px;
+      height: 320px;
+      border-radius: 12px;
+      box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+      transition: transform 0.3s, box-shadow 0.3s;
+      position: relative;
+      overflow: hidden;
     }
 
     .swiper-slide:hover {
-      transform: translateY(-10px);
+      transform: translateY(-10px) scale(1.02);
+      box-shadow: 0 25px 50px rgba(0,0,0,0.6);
     }
 
     .book-link {
@@ -52,6 +84,41 @@
       width: 100%;
       height: 100%;
       text-decoration: none;
+      position: relative;
+    }
+
+    .volume-badge {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: linear-gradient(135deg, #e74c3c, #c0392b);
+      color: white;
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: bold;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.3);
+      z-index: 10;
+    }
+
+    .book-info {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: linear-gradient(transparent, rgba(0,0,0,0.9));
+      padding: 40px 15px 15px;
+      color: white;
+    }
+
+    .book-title {
+      font-size: 0.9rem;
+      font-weight: 500;
+      line-height: 1.3;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
     }
 
     .book-placeholder {
@@ -63,22 +130,42 @@
       color: white;
       text-align: center;
       padding: 20px;
-      border-radius: 8px;
-      box-sizing: border-box;
-      font-size: 1.2rem;
+      border-radius: 12px;
+      font-size: 1rem;
       font-weight: bold;
+    }
+
+    .loading-spinner {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 40px;
+      height: 40px;
+      border: 3px solid rgba(255,255,255,0.3);
+      border-top-color: #3498db;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: translate(-50%, -50%) rotate(360deg); }
+    }
+
+    .error-message {
+      text-align: center;
+      padding: 20px;
+      color: #e74c3c;
     }
   </style>
 </head>
 <body>
 
   <h1>MY BOOKSHELF</h1>
+  <div class="subtitle">Light Novel Collection</div>
 
-  <div class="swiper mySwiper">
-    <div class="swiper-wrapper">
-      <!-- Books will be populated here by JavaScript -->
-    </div>
-    <div class="swiper-pagination"></div>
+  <div id="bookshelf-container">
+    <!-- Series will be populated here -->
   </div>
 
   <!-- JSZip for reading EPUB files -->
@@ -87,39 +174,43 @@
   <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
 
   <script>
-    // Your books configuration (public paths used for deployment)
-    const books = [
+    // Series configuration with volumes
+    const series = [
       {
         title: "わたしが恋人になれるわけないじゃん、ムリムリ！",
-        epub: "bibi-bookshelf/わたしが恋人になれるわけないじゃん、ムリムリ！/わたしが恋人になれるわけないじゃん、ムリムリ！（※ムリじゃなかった!）.epub"
+        folder: "bibi-bookshelf/わたしが恋人になれるわけないじゃん、ムリムリ！",
+        // Auto-discover volumes based on filename pattern
+        volumes: [
+          { file: "わたしが恋人になれるわけないじゃん、ムリムリ！（※ムリじゃなかった!）.epub", volume: 1 },
+          { file: "わたしが恋人になれるわけないじゃん、ムリムリ！（※ムリじゃなかった!） 2.epub", volume: 2 },
+          { file: "わたしが恋人になれるわけないじゃん、ムリムリ！（※ムリじゃなかった!） 3.epub", volume: 3 },
+          { file: "わたしが恋人になれるわけないじゃん、ムリムリ！（※ムリじゃなかった!） 4.epub", volume: 4 }
+        ]
       },
       {
-        title: "Sample Pre-Paginated LtR",
-        epub: "bibi-bookshelf/__samples/Sample_Pre-Paginated_LtR.epub"
-      },
-      {
-        title: "Sample Pre-Paginated RtL",
-        epub: "bibi-bookshelf/__samples/Sample_Pre-Paginated_RtL.epub"
+        title: "Sample Books",
+        folder: "bibi-bookshelf/__samples",
+        volumes: [
+          { file: "Sample_Pre-Paginated_LtR.epub", title: "Pre-Paginated LtR" },
+          { file: "Sample_Pre-Paginated_RtL.epub", title: "Pre-Paginated RtL" }
+        ]
       }
     ];
 
     // Extract cover from EPUB
     async function extractEpubCover(epubPath) {
       try {
-        // Ensure the path is URL-encoded (preserve slashes) so non-ASCII
-        // characters and punctuation don't break the request.
         const fetchPath = encodeURI(epubPath);
         const response = await fetch(fetchPath);
 
-        // If the server returned a non-OK status, or returned HTML (custom 404 page),
-        // bail out early so JSZip doesn't try to parse an error page as a ZIP.
         if (!response.ok) {
-          console.warn('EPUB fetch failed:', fetchPath, response.status, response.statusText);
+          console.warn('EPUB fetch failed:', fetchPath, response.status);
           return null;
         }
+        
         const contentType = response.headers.get('content-type') || '';
         if (contentType.includes('text/html')) {
-          console.warn('EPUB fetch returned HTML (likely 404 page):', fetchPath);
+          console.warn('EPUB fetch returned HTML (likely 404):', fetchPath);
           return null;
         }
 
@@ -127,46 +218,41 @@
         const zip = new JSZip();
         const zipContents = await zip.loadAsync(arrayBuffer);
 
-        // Find and read container.xml to get the OPF path
+        // Find and read container.xml
         const containerXml = await zipContents.file('META-INF/container.xml').async('text');
         const parser = new DOMParser();
         const containerDoc = parser.parseFromString(containerXml, 'text/xml');
         const opfPath = containerDoc.querySelector('rootfile').getAttribute('full-path');
 
-        // Read the OPF file to find cover image
+        // Read OPF
         const opfContent = await zipContents.file(opfPath).async('text');
         const opfDoc = parser.parseFromString(opfContent, 'text/xml');
 
-        // Find cover image ID
+        // Find cover
         let coverId = null;
         const metadata = opfDoc.querySelector('metadata');
-        
-        // Look for cover meta tag
-        const coverMeta = metadata.querySelector('meta[name="cover"]');
+        const coverMeta = metadata?.querySelector('meta[name="cover"]');
         if (coverMeta) {
           coverId = coverMeta.getAttribute('content');
         }
 
         if (!coverId) {
-          // Fallback: look for image with cover in ID or properties
           const manifest = opfDoc.querySelector('manifest');
-          const coverItem = manifest.querySelector('item[properties*="cover"]') || 
-                           manifest.querySelector('item[id*="cover"]');
+          const coverItem = manifest?.querySelector('item[properties*="cover"]') || 
+                           manifest?.querySelector('item[id*="cover"]');
           if (coverItem) {
             coverId = coverItem.getAttribute('id');
           }
         }
 
-        // Get the cover image path from manifest
         if (coverId) {
           const manifest = opfDoc.querySelector('manifest');
-          const coverItem = manifest.querySelector(`item[id="${coverId}"]`);
+          const coverItem = manifest?.querySelector(`item[id="${coverId}"]`);
           if (coverItem) {
             const coverHref = coverItem.getAttribute('href');
             const opfDir = opfPath.substring(0, opfPath.lastIndexOf('/'));
-            const imagePath = opfDir + '/' + coverHref;
+            const imagePath = opfDir ? `${opfDir}/${coverHref}` : coverHref;
 
-            // Extract and convert to blob URL
             const imageFile = zipContents.file(imagePath);
             if (imageFile) {
               const imageBlob = await imageFile.async('blob');
@@ -180,61 +266,130 @@
       return null;
     }
 
-    // Initialize bookshelf
-    async function initBookshelf() {
-      const wrapper = document.querySelector('.swiper-wrapper');
-      
-      for (const book of books) {
-        const coverUrl = await extractEpubCover(book.epub);
-        
-        const slide = document.createElement('div');
-        slide.className = 'swiper-slide';
-        
-        if (coverUrl) {
-          slide.style.backgroundImage = `url('${coverUrl}')`;
-        } else {
-          slide.style.backgroundImage = 'linear-gradient(135deg, #2c3e50, #3498db)';
-        }
-
-        const link = document.createElement('a');
-        // encodeURIComponent to ensure non-ASCII filenames are URL-safe
-        // Strip 'bibi-bookshelf/' prefix since Bibi resolves book paths relative to bookshelf
-        const bookPathForBibi = book.epub.replace(/^bibi-bookshelf\//, '');
-        link.href = `./bibi/?book=${encodeURIComponent(bookPathForBibi)}`;
-        link.className = 'book-link';
-
-        if (!coverUrl) {
-          const placeholder = document.createElement('div');
-          placeholder.className = 'book-placeholder';
-          placeholder.textContent = book.title;
-          link.appendChild(placeholder);
-        }
-
-        slide.appendChild(link);
-        wrapper.appendChild(slide);
-      }
-
-      // Initialize Swiper after books are loaded
-      new Swiper('.mySwiper', {
-        effect: 'coverflow',
-        grabCursor: true,
-        centeredSlides: true,
-        slidesPerView: 'auto',
-        coverflowEffect: {
-          rotate: 40,
-          stretch: 0,
-          depth: 250,
-          modifier: 1,
-          slideShadows: true,
-        },
-        pagination: {
-          el: '.swiper-pagination',
-        },
-        initialSlide: 1
-      });
+    // Create series section HTML
+    function createSeriesSection(seriesData, index) {
+      const section = document.createElement('div');
+      section.className = 'series-section';
+      section.innerHTML = `
+        <div class="series-title">${seriesData.title}</div>
+        <div class="swiper mySwiper-${index}">
+          <div class="swiper-wrapper" id="swiper-wrapper-${index}">
+            <!-- Volumes will be populated here -->
+          </div>
+          <div class="swiper-pagination"></div>
+        </div>
+      `;
+      return section;
     }
 
-    initBookshelf();
+    // Create volume slide
+    async function createVolumeSlide(volume, seriesFolder) {
+      const epubPath = `${seriesFolder}/${volume.file}`;
+      const coverUrl = await extractEpubCover(epubPath);
+      
+      const slide = document.createElement('div');
+      slide.className = 'swiper-slide';
+      
+      if (coverUrl) {
+        slide.style.backgroundImage = `url('${coverUrl}')`;
+      } else {
+        slide.style.backgroundImage = 'linear-gradient(135deg, #2c3e50, #3498db)';
+      }
+
+      // Volume badge
+      if (volume.volume) {
+        const badge = document.createElement('div');
+        badge.className = 'volume-badge';
+        badge.textContent = `Vol. ${volume.volume}`;
+        slide.appendChild(badge);
+      }
+
+      // Link to reader
+      const link = document.createElement('a');
+      link.className = 'book-link';
+      const bookPathForBibi = epubPath.replace(/^bibi-bookshelf\//, '');
+      link.href = `./bibi/?book=${encodeURIComponent(bookPathForBibi)}`;
+
+      // Book info overlay
+      const info = document.createElement('div');
+      info.className = 'book-info';
+      const title = document.createElement('div');
+      title.className = 'book-title';
+      title.textContent = volume.title || `Volume ${volume.volume}`;
+      info.appendChild(title);
+      link.appendChild(info);
+
+      // Placeholder if no cover
+      if (!coverUrl) {
+        const placeholder = document.createElement('div');
+        placeholder.className = 'book-placeholder';
+        placeholder.textContent = volume.title || `Volume ${volume.volume}`;
+        slide.appendChild(placeholder);
+      }
+
+      slide.appendChild(link);
+      return slide;
+    }
+
+    // Initialize bookshelf
+    async function initBookshelf() {
+      const container = document.getElementById('bookshelf-container');
+
+      for (let i = 0; i < series.length; i++) {
+        const seriesData = series[i];
+        const section = createSeriesSection(seriesData, i);
+        container.appendChild(section);
+
+        const wrapper = document.getElementById(`swiper-wrapper-${i}`);
+
+        // Create slides for all volumes
+        for (const volume of seriesData.volumes) {
+          const slide = await createVolumeSlide(volume, seriesData.folder);
+          wrapper.appendChild(slide);
+        }
+
+        // Initialize Swiper for this series
+        new Swiper(`.mySwiper-${i}`, {
+          effect: 'coverflow',
+          grabCursor: true,
+          centeredSlides: true,
+          slidesPerView: 'auto',
+          coverflowEffect: {
+            rotate: 35,
+            stretch: 0,
+            depth: 200,
+            modifier: 1,
+            slideShadows: true,
+          },
+          pagination: {
+            el: '.swiper-pagination',
+            clickable: true,
+          },
+          initialSlide: 0,
+          breakpoints: {
+            320: {
+              slidesPerView: 2,
+              spaceBetween: 20
+            },
+            768: {
+              slidesPerView: 3,
+              spaceBetween: 30
+            },
+            1024: {
+              slidesPerView: 4,
+              spaceBetween: 40
+            }
+          }
+        });
+      }
+    }
+
+    // Start initialization
+    initBookshelf().catch(error => {
+      console.error('Failed to initialize bookshelf:', error);
+      document.getElementById('bookshelf-container').innerHTML = 
+        '<div class="error-message">Failed to load bookshelf. Please check the console for details.</div>';
+    });
   </script>
 </body>
 </html>
